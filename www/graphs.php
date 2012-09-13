@@ -4,8 +4,8 @@ ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
 include 'sma_db.php';
-include 'drawgraph.php';
-$result = SMADB::readData();
+define("L_LANG", "en_US");
+require('calendar/tc_calendar.php');
 
 function writeCommonGraphProperties() {
 	echo "legend: 'always',";
@@ -55,20 +55,71 @@ function writeCommonGraphProperties() {
 	    </style>
 	
   <title>Off-Grid Manager</title>
-  
-	<?php 
-	  mysql_data_seek($result, mysql_num_rows($result)-1);
-	  $latest = mysql_fetch_array($result);
-	?>
 
 </head>
 
 <body style="font-family: Arial;border: 0 none;">
+	<div class="container-fluid">	  
+      <div class="row-fluid"> 
+		
+			
+	<form id="datepicker" action="graphs.php" method="GET">
+	<div class="span8">
+		<div style="float: left;">
+		                    <div style="float: left; padding-right: 3px; line-height: 18px;">From:</div>
+		                    <div style="float: left;">	
+	<?php 
 	
-	<?php include 'navbar.php'; ?>
-    
+	include 'navbar.php'; 
+	
+	$from = date('Y-m-d', time());
+	$to = date('Y-m-d', time() - (24 * 60*60));
+	if (isset($_GET["from"])) { $from = $_GET["from"];}
+	if (isset($_GET["to"])) { $to = $_GET["to"];}
+	
+	 $myCalendar = new tc_calendar("from", true, false);
+	 $myCalendar->setIcon("calendar/images/iconCalendar.gif");
+	 $myCalendar->setDate(date('d', strtotime($from))
+	       , date('m', strtotime($from))
+	       , date('Y', strtotime($from)));
+	 $myCalendar->setPath("calendar/");
+	 $myCalendar->setYearInterval(1970, 2020);
+	 $myCalendar->setAlignment('left', 'bottom');
+	 $myCalendar->setDatePair('from', 'to', $to);
+	 $myCalendar->writeScript();	  
+    ?>
+	
+	</div>
+	</div>
+	<div style="float: left;">
+	                    <div style="float: left; padding-left: 3px; padding-right: 3px; line-height: 18px;">To</div>
+	                    <div style="float: left;">
+	<?php	
+	 $myCalendar = new tc_calendar("to", true, false);
+	 $myCalendar->setIcon("calendar/images/iconCalendar.gif");
+	 $myCalendar->setDate(date('d', strtotime($to))
+	      , date('m', strtotime($to))
+	      , date('Y', strtotime($to)));
+	 $myCalendar->setPath("calendar/");
+	 $myCalendar->setYearInterval(1970, 2020);
+	 $myCalendar->setAlignment('left', 'bottom');
+	 $myCalendar->setDatePair('from', 'to', $from);
+	 $myCalendar->writeScript();
+	
+	$result = SMADB::readData($from,$to);
+	
+	mysql_data_seek($result, mysql_num_rows($result)-1);
+	$latest = mysql_fetch_array($result);
+	?>
+    </div>
+	</div>
 
-    <div class="container-fluid">	  
+		
+		<div style="float: left;">
+			<input type="submit">
+		</div>	
+		</form>
+	  </div>
       <div class="row-fluid"> 
 		<div class="span12">
 		  <a name="battery"><h2>Battery</h2></a>
@@ -195,9 +246,8 @@ function writeCommonGraphProperties() {
 	        });
 			
 	var graphs = [];
-    var data = "";
 
-    data = "Date,Voltage,Charging Current,Charging Power(kW)\n" +
+    var data1 = "Date,Voltage,Charging Current,Charging Power(kW)\n" +
 	<?php
 	  mysql_data_seek($result,0);
 	  $i = 0;
@@ -210,7 +260,7 @@ function writeCommonGraphProperties() {
 
 	 graphs[0] = new Dygraph(
 	          document.getElementById("bvtg"),
-	          data,
+	          data1,
 	          {
 				labelsDiv: 'bvtglabel',
 	            title: 'Voltage / Charging Current / Charging Power',
@@ -219,12 +269,13 @@ function writeCommonGraphProperties() {
 	          }
 	 );
 	
-	data = "Date,Current,SoC (%)\n" +
+	var data2 = "Date,Current,SoC (%)\n" +
 	<?php
 	  mysql_data_seek($result,0);
 	  $i = 0;
 	  while ($line = mysql_fetch_array($result)) {
-	    	echo '"'.SMADB::dygraphTimeFormat($line).','.$line['TotBatCur']*-1 .','.$line['BatSoc'].'\n"';
+			$deviation = $line['BatSoc'] * $line['BatSocErr'] / 100;
+	    	echo '"'.SMADB::dygraphTimeFormat($line).','.$line['TotBatCur']*-1 .',0,'.$line['BatSoc'].','. $deviation .'\n"';
 			$i++;
 			if ($i < mysql_num_rows($result)) {echo "+"; } else {echo ";";}
 		}
@@ -232,16 +283,17 @@ function writeCommonGraphProperties() {
 
 	 graphs[0] = new Dygraph(
 	          document.getElementById("soc"),
-	          data,
+	          data2,
 	          {
 				labelsDiv: 'soclabel',
+				errorBars: true,
 	            title: 'Charging Current / State of Charge',
 	            ylabel: 'Amps / %',
 	            <?php writeCommonGraphProperties() ?>
 	          }
 	 );
 		
-	data = "Date,Inverter Power (W), Battery Loads (VA)\n" +
+	var data3 = "Date,Inverter Power (W), Battery Loads (VA)\n" +
 	<?php
 	  mysql_data_seek($result,0);
 	  $i = 0;
@@ -256,7 +308,7 @@ function writeCommonGraphProperties() {
     
 	 g4 = new Dygraph(
 	          document.getElementById("ipower"),
-	          data,
+	          data3,
 	          {
 	            title: 'Inverter Power (W), Battery Loads (VA)',
 	            ylabel: 'Watts / VA',
@@ -265,7 +317,7 @@ function writeCommonGraphProperties() {
 	          }
 	 );
 	
-	data = "Date,Voltage\n" +
+	var data4 = "Date,Voltage\n" +
 	<?php
 	  mysql_data_seek($result,0);
 	  $i = 0;
@@ -278,7 +330,7 @@ function writeCommonGraphProperties() {
 
 	 g4 = new Dygraph(
 	          document.getElementById("ivolts"),
-	          data,
+	          data4,
 	          {
 	            title: 'Voltage',
 	            ylabel: 'Volts',
@@ -286,7 +338,7 @@ function writeCommonGraphProperties() {
 	          }
 	 );	
 	
-	data = "Date,Frequency\n" +
+	var data5 = "Date,Frequency\n" +
 	<?php
 	  mysql_data_seek($result,0);
 	  $i = 0;
@@ -299,7 +351,7 @@ function writeCommonGraphProperties() {
 
 	 g4 = new Dygraph(
 	          document.getElementById("ifreq"),
-	          data,
+	          data5,
 	          {
 	            title: 'Frequency',
 	            ylabel: 'Hertz',
@@ -309,6 +361,5 @@ function writeCommonGraphProperties() {
 	
 	</script>
 	
-
 </body>
 </html>
