@@ -6,7 +6,7 @@ require '/var/www/classic/midniteclassic.php';
 define('LOGDB',false);
 define('LOGCOSM',true);
 define('DEBUG', 1);
-define('APIKEY','3e402e999ed708f1a08da7aeb9457f09bf037a7b2ebe946d99532be9d6afa4d5');
+define('APIKEY','<insert key>');
 define('FEED',75889);
 define('DATASTREAM1',"Current");
 define('DATASTREAM2',"BatteryVoltage");
