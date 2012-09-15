@@ -3,7 +3,7 @@
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
-include 'sma_db.php';
+include 'db.php';
 define("L_LANG", "en_US");
 require('calendar/tc_calendar.php');
 
@@ -72,8 +72,8 @@ function writeCommonGraphProperties() {
 	
 	include 'navbar.php'; 
 	
-	$from = date('Y-m-d', time());
-	$to = date('Y-m-d', time() - (24 * 60*60));
+	$from = date('Y-m-d', time() - (24 * 60 * 60));
+	$to = date('Y-m-d', time());
 	if (isset($_GET["from"])) { $from = $_GET["from"];}
 	if (isset($_GET["to"])) { $to = $_GET["to"];}
 	
@@ -106,7 +106,8 @@ function writeCommonGraphProperties() {
 	 $myCalendar->setDatePair('from', 'to', $from);
 	 $myCalendar->writeScript();
 	
-	$result = SMADB::readData($from,$to);
+	$db = new DB("localhost","sma","ogmanager");
+	$result = $db->readInverterData($from,$to);
 	
 	mysql_data_seek($result, mysql_num_rows($result)-1);
 	$latest = mysql_fetch_array($result);
@@ -252,7 +253,7 @@ function writeCommonGraphProperties() {
 	  mysql_data_seek($result,0);
 	  $i = 0;
 	  while ($line = mysql_fetch_array($result)) {
-	    	echo '"'.SMADB::dygraphTimeFormat($line).','.$line['BatVtg'].','.$line['TotBatCur'] * -1 .','.$line['BatVtg'] * $line['TotBatCur'] * -1/1000 .'\n"';
+	    	echo '"'.DB::dygraphTimeFormat($line).','.$line['BatVtg'].','.$line['TotBatCur'] * -1 .','.$line['BatVtg'] * $line['TotBatCur'] * -1/1000 .'\n"';
 			$i++;
 			if ($i < mysql_num_rows($result)) {echo "+"; } else {echo ";";}
 		}
@@ -275,7 +276,7 @@ function writeCommonGraphProperties() {
 	  $i = 0;
 	  while ($line = mysql_fetch_array($result)) {
 			$deviation = $line['BatSoc'] * $line['BatSocErr'] / 100;
-	    	echo '"'.SMADB::dygraphTimeFormat($line).','.$line['TotBatCur']*-1 .',0,'.$line['BatSoc'].','. $deviation .'\n"';
+	    	echo '"'. DB::dygraphTimeFormat($line).','.$line['TotBatCur']*-1 .',0,'.$line['BatSoc'].','. $deviation .'\n"';
 			$i++;
 			if ($i < mysql_num_rows($result)) {echo "+"; } else {echo ";";}
 		}
@@ -300,7 +301,7 @@ function writeCommonGraphProperties() {
 	  while ($line = mysql_fetch_array($result)) {
 			$batcur = 0;
 			if ($line['TotBatCur'] > 0) $batcur = $line['TotBatCur'];
-	    	echo '"'.SMADB::dygraphTimeFormat($line).','.$line['InvPwrAt']*1000 .','.$line['BatVtg'] * $batcur .'\n"';
+	    	echo '"'.DB::dygraphTimeFormat($line).','.$line['InvPwrAt']*1000 .','.$line['BatVtg'] * $batcur .'\n"';
 			$i++;
 			if ($i < mysql_num_rows($result)) {echo "+"; } else {echo ";";}
 		}
@@ -322,7 +323,7 @@ function writeCommonGraphProperties() {
 	  mysql_data_seek($result,0);
 	  $i = 0;
 	  while ($line = mysql_fetch_array($result)) {
-	    	echo '"'.SMADB::dygraphTimeFormat($line).','. $line['InvVtg'] .'\n"';
+	    	echo '"'.DB::dygraphTimeFormat($line).','. $line['InvVtg'] .'\n"';
 			$i++;
 			if ($i < mysql_num_rows($result)) {echo "+"; } else {echo ";";}
 		}
@@ -343,7 +344,7 @@ function writeCommonGraphProperties() {
 	  mysql_data_seek($result,0);
 	  $i = 0;
 	  while ($line = mysql_fetch_array($result)) {
-	    	echo '"'.SMADB::dygraphTimeFormat($line).','.$line['InvFrq'] .'\n"';
+	    	echo '"'.DB::dygraphTimeFormat($line).','.$line['InvFrq'] .'\n"';
 			$i++;
 			if ($i < mysql_num_rows($result)) {echo "+"; } else {echo ";";}
 		}
@@ -361,5 +362,6 @@ function writeCommonGraphProperties() {
 	
 	</script>
 	
+	<?php $db->close(); ?>
 </body>
 </html>
