@@ -2,48 +2,42 @@
 
 <?php
 
-require '/var/www/classic/midniteclassic.php';
-require '/var/www/cosm.php';
+require 'midniteclassic.php';
+require '../cosm.php';
+require '../constants.php';
 
-define('LOGDB',true);
-define('LOGCOSM',true);
+define('LOGDB',false);
+define('LOGCOSM',false);
 define('DEBUG', 1);
 define('APIKEY','<insert key>');
 define('FEED',75889);
 define('DATASTREAM1',"Current");
 define('DATASTREAM2',"BatteryVoltage");
 define('DATASTREAM3',"PVVoltage");
-define('DBUNAME','sma');
-define('DBPASSWORD','ogmanager');
+
 
 global $db;
+require '../db.php';
+$db = new DB("localhost",DBUNAME,DBPASSWORD);
+$db->createChargerDB();
+require_once '../guzzle.phar';
 
-if (LOGDB) {
-	require '/var/www/db.php';
-	$db = new DB("localhost",DBUNAME,DBPASSWORD);
-	$db->createChargerDB();
-}
-
-if (LOGCOSM) {
-	require_once '/var/www/guzzle.phar';
-}
 
 $classic = new MidniteClassic("192.168.0.16");
-$cosm = new Cosm(APIKEY);
 
-while (true) {
+$cosm = new Cosm(APIKEY);
 	set_time_limit(30);
-	$curr = $classic->readRegister(BATT_CUR)/10;
-	$battvolts = $classic->readRegister(BATT_VOLTS)/10;
-	$pvvolts =  $classic->readRegister(PV_VOLTS)/10;	
+	$classic->readKeyValues();
+	$curr = $classic->battCurrent;
+	$battvolts = $classic->battVoltage;
+	$pvvolts =  $classic->pvVoltage;	
 	if (DEBUG) {
 		print "Got values from Classic: $curr A,  $battvolts V,  $pvvolts V\n";
 	}
 	
-	if (LOGDB) {
-		$db->updateCharger($curr, $battvolts ,$pvvolts );
-	}
 	
+	$db->updateCharger($curr, $battvolts ,$pvvolts );
+
 	if (LOGCOSM) {
 		$json = array(
 			"version" => "1.0.0",
@@ -66,9 +60,8 @@ while (true) {
 		$cosm->update(FEED, $json);
 	}	
 	
-	//Cosm free account has a 10 requests pre minute limit
-	sleep(7);
-}
+	if (LOGDB)
+
 
 
 

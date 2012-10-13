@@ -10,9 +10,23 @@ define('DAILY_AH',4124);
 define('BATT_TEMP',4132);
 define('ABSORB_COUNTER', 4138);
 define('EQ_REMAINING',4142);
-define('BATT_CUR',4271);
-define('BATT_VOLTS',4275);
-define('PV_VOLTS',4276);
+define('BATT_CUR',4116);
+define('BATT_VOLTS',4114);
+define('PV_VOLTS',4115);
+define('ABSORB_V',4148);
+define('CHARGE_STAGE',4119);
+
+/*
+	Battery stage
+		0 = Resting
+		3 = Absorb
+		4 = BulkMPPT
+		5 = Float
+		6 = FloatMPPT
+		7 = EQ
+		10 = VyperVOC
+		18 = EQMPPT
+*/
 
 class MidniteClassic {
 		
@@ -68,14 +82,27 @@ class MidniteClassic {
 		}
 	}
 	
-	//Not working, don't call
+	function readKeyValues() {
+		$this->chargeStage = $this->readChargeStage();
+		$this->battCurrent = $this->readRegister(BATT_CUR)/10;
+		$this->battVoltage = $this->readRegister(BATT_VOLTS)/10;
+		$this->pvVoltage = $this->readRegister(PV_VOLTS)/10;
+	}
+	
 	function forceEQ() {
 		$this->writeRegister(4159,0x80);
 	}
 	
-	function unlock($data) {
-		$types = array("INT");
-		$this->writeRegisters(20491,$data,$types);
+	function forceBulk($volts) {
+		$this->writeRegister(4159,0x40);
+	}
+	
+	function forceFloat($volts) {
+		$this->writeRegister(4159,0x20);
+	}	
+	
+	function readChargeStage() {
+		return $this->readRegister(CHARGE_STAGE);
 	}
 	
 	function convertBytes($msb,$lsb) {
@@ -84,9 +111,10 @@ class MidniteClassic {
 }
 
 // Create Modbus object
-//$classic = new MidniteClassic("192.168.0.16");
+$classic = new MidniteClassic("192.168.0.16");
 //echo $classic->readRegister(BATT_CUR)/10;
 //echo $classic->readRegister(BATT_VOLTS)/10;
 //echo $classic->readRegister(PV_VOLTS)/10;
+
 
 ?>

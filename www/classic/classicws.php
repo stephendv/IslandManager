@@ -9,6 +9,8 @@ $all = array(
 	'BATT_VOLTS' => $classic->readRegister(BATT_VOLTS)/10,
 );
 
-print json_encode($all);
+//print json_encode($all);
+
+$classic
 
 ?>

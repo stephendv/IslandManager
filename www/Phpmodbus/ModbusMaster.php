@@ -761,6 +761,46 @@ class ModbusMaster {
     $this->status .= "writeMultipleRegister: DONE\n";
     return true;
   }
+  
+  function writeRegisterWithCode($code,$reg,$data,$type="INT") {
+		$val[0] = $data;
+		$datatype[0] = $type;
+		$types[0] = "INT";
+		$codes[0] = $code;
+		try {
+		    //$temp = $this->modbus->writeMultipleRegister(1, $reg, $val, $datatype);
+		    $this->connect();
+		    echo "Writing code: "+$codes[0]+"\n";
+		    $temp = $this->writeMultipleRegisterNoConnect(1,20491,$codes,$types);
+		    echo "Code result: "+$temp;
+		    echo $val[0];
+		    echo $datatype[0];
+		    //$temp = $this->writeMultipleRegisterNoConnect(1, $reg, $val, $datatype);
+		    $this->disconnect();
+		    return $temp;
+		} catch (Exception $e) {
+		    echo "Error :" . $e;    		    
+		}
+	}
+	
+  function writeMultipleRegisterNoConnect($unitId, $reference, $data, $dataTypes){
+    $this->status .= "writeMultipleRegister: START\n";
+    // connect
+    //$this->connect();
+    // send FC16    
+    $packet = $this->writeMultipleRegisterPacketBuilder($unitId, $reference, $data, $dataTypes);
+    $this->status .= $this->printPacket($packet);    
+    $this->send($packet);
+    // receive response
+    $rpacket = $this->rec();
+    $this->status .= $this->printPacket($rpacket);    
+    // parse packet
+    $this->writeMultipleRegisterParser($rpacket);
+    // disconnect
+    //$this->disconnect();
+    $this->status .= "writeMultipleRegister: DONE\n";
+    return true;
+  }
 
 
   /**

@@ -8,7 +8,7 @@ class DB {
 	function __construct($address,$user,$password) {
 	   $this->con = mysql_connect($address, $user, $password);
 	   mysql_select_db("sma", $this->con);
-	}
+	}	
 	
 	public function readInverterData($from, $to) {
 		if (empty($from)) {
