@@ -29,6 +29,16 @@ class DB {
 		return $result;
 	} 
 	
+	public function readLatestInverterData($limit) {
+		$result = mysql_query("select * from logged_values order by logdate DESC,logtime DESC limit " . $limit);
+		return $result;
+	}	
+	
+	public function isUpToDate() {
+		//TODO check that the latest record from SI matches the current time
+		return true;
+	}	
+	
 	public function createChargerDB() {
 		$result = mysql_query("CREATE TABLE IF NOT EXISTS solarcharger (date DATETIME, current FLOAT,volts FLOAT,pvvolts FLOAT)")  or print(mysql_error());
 		return $result;
@@ -42,7 +52,7 @@ class DB {
 		$query = "INSERT INTO solarcharger values ('$date',$current,$volts,$pvvolts)";
 		//print $query;
 	 	$result = mysql_query($query) or print(mysql_error());
-	    return $result;
+	 	return $result;
 	}
 	
 	
@@ -55,7 +65,7 @@ class DB {
 	}
 	
 	public function close() {
-		mysql_close($this->$con);
+		mysql_close($this->con);
 	}
 }
 

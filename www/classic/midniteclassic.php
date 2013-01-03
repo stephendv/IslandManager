@@ -15,6 +15,7 @@ define('BATT_VOLTS',4114);
 define('PV_VOLTS',4115);
 define('ABSORB_V',4148);
 define('CHARGE_STAGE',4119);
+define('CURRENT_LIMIT',4147);
 
 /*
 	Battery stage
@@ -87,33 +88,67 @@ class MidniteClassic {
 		$this->battCurrent = $this->readRegister(BATT_CUR)/10;
 		$this->battVoltage = $this->readRegister(BATT_VOLTS)/10;
 		$this->pvVoltage = $this->readRegister(PV_VOLTS)/10;
+		$this->absorbVoltage = $this->readRegister(ABSORB_V)/10;
+		$this->currentLimit = $this->readRegister(CURRENT_LIMIT)/10;
+	}
+	
+	function setCurrentLimit($curr) {
+		$this->writeRegister(CURRENT_LIMIT, $curr*10);
+	}
+	
+	function readCurrentLimit() {
+		$this->readRegister(CURRENT_LIMIT)/10;
 	}
 	
 	function forceEQ() {
 		$this->writeRegister(4159,0x80);
 	}
 	
-	function forceBulk($volts) {
+	function forceBulk() {
 		$this->writeRegister(4159,0x40);
 	}
 	
-	function forceFloat($volts) {
+	function forceFloat() {
 		$this->writeRegister(4159,0x20);
 	}	
 	
 	function readChargeStage() {
-		return $this->readRegister(CHARGE_STAGE);
+		return ($this->readRegister(CHARGE_STAGE) >> 8);
 	}
 	
 	function convertBytes($msb,$lsb) {
 		return (($msb << 8) + $lsb);
 	}
+	
+		
+	function isInBulk() {
+		if (readChargeStage() == 4) return true;
+		return false;
+	}	
+
+	function isInAbsorb() {
+		if (readChargeStage() == 3) return true;
+		return false;
+	}		
+
+	function isInFloat() {
+		if (readChargeStage() == 5) return true;
+		if (readChargeStage() == 6) return true;
+		return false;
+	}	
+	
+	function isInEQ() {
+		if (readChargeStage() == 7) return true;
+		if (readChargeStage() == 18) return true;
+		return false;
+	}	
 }
 
 // Create Modbus object
 $classic = new MidniteClassic("192.168.0.16");
+//$classic->forceBulk();
 //echo $classic->readRegister(BATT_CUR)/10;
-//echo $classic->readRegister(BATT_VOLTS)/10;
+echo $classic->readRegister(BATT_VOLTS)/10;
 //echo $classic->readRegister(PV_VOLTS)/10;
 
 

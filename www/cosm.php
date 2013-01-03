@@ -2,7 +2,7 @@
 
 <?php
 
-require_once 'guzzle.phar';
+require_once '/var/www/guzzle.phar';
 
 class Cosm {
 	

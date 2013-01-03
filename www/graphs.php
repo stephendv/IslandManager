@@ -109,7 +109,9 @@ function writeCommonGraphProperties() {
 	$db = new DB("localhost","sma","ogmanager");
 	$result = $db->readInverterData($from,$to);
 	
-	mysql_data_seek($result, mysql_num_rows($result)-1);
+	if (mysql_num_rows($result) > 0) {
+		mysql_data_seek($result, mysql_num_rows($result)-1);
+	}
 	$latest = mysql_fetch_array($result);
 	?>
     </div>
