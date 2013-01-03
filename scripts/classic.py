@@ -9,7 +9,7 @@ log = logging.getLogger()
 #log.setLevel(logging.DEBUG)
 
 SERIAL1 = 0                 # The first part of the serial number
-SERIAL2 = 1914              # The second part of the serial number
+SERIAL2 = 1211              # The second part of the serial number
 HOST = '192.168.0.16'
 
 client = ModbusTcpClient(HOST)
