@@ -47,10 +47,6 @@ def main(argv):
 		unlock(SERIAL1, SERIAL2)
 		forcefloat()
 
-	result = client.read_holding_registers(4150,1)
-	print result.registers[0]
-	r = client.read_holding_registers(4161,1)
-	print r.registers[0]
 	client.close()
 
 if __name__ == "__main__":
