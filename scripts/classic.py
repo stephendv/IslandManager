@@ -6,10 +6,10 @@ import logging
 
 logging.basicConfig()
 log = logging.getLogger()
-#log.setLevel(logging.DEBUG)
+log.setLevel(logging.DEBUG)
 
 SERIAL1 = 0                 # The first part of the serial number
-SERIAL2 = 1211              # The second part of the serial number
+SERIAL2 = 1914              # The second part of the serial number
 HOST = '192.168.0.16'
 
 client = ModbusTcpClient(HOST)
@@ -21,15 +21,20 @@ def unlock(serial1,serial2):
 
 def forceeq(volts, time=1):
 	global client
-	client.write_register(4150,int(volts*10))
-	client.write_register(4161,time)
-	client.write_register(4159,0x80)
+	rq = client.write_register(4150,int(volts*10))
+	assert(rq.function_code < 0x80) 
+	rq = client.write_register(4161,time)
+	assert(rq.function_code < 0x80) 
+	rq = client.write_register(4159,0x80)
+	assert(rq.function_code < 0x80) 
 
 def forcefloat():
+	print "Forcing float"
 	global client
-	client.write_register(4159,0x20)
+	rq = client.write_register(4159,0x20)
+	assert(rq.function_code < 0x80) 
 
-def forcefloat():
+def forcebulk():
 	global client
 	client.write_register(4159,0x40)
 
@@ -48,6 +53,7 @@ def main(argv):
 		forcefloat()
 
 	client.close()
+	print "Done."
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
